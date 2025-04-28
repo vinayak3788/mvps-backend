@@ -1,3 +1,5 @@
+//src/features/user/UserDashboard.jsx
+
 import React, { useState, useEffect } from "react";
 import { signOut, onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";

@@ -53,7 +53,13 @@ export default function Login() {
     try {
       // 1. Fetch Role
       const roleRes = await axios.get(`/api/get-role?email=${userEmail}`);
-      const role = roleRes.data.role;
+      let role = roleRes.data.role;
+
+      // If role is missing/unknown, force "user"
+      if (!role || (role !== "admin" && role !== "user")) {
+        console.warn("⚠️ Unknown role received. Defaulting to user.");
+        role = "user";
+      }
 
       // 2. Fetch Profile
       const profileRes = await axios.get(`/api/get-profile?email=${userEmail}`);
@@ -67,13 +73,11 @@ export default function Login() {
         return;
       }
 
-      // 3. Mobile verified, route to dashboard
+      // 3. Mobile verified, route based on role
       if (role === "admin") {
         navigate("/admin");
-      } else if (role === "user") {
-        navigate("/userdashboard");
       } else {
-        toast.error("Unknown role. Contact admin.");
+        navigate("/userdashboard");
       }
     } catch (error) {
       console.error("❌ Post login check error:", error);
