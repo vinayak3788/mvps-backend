@@ -1,0 +1,88 @@
+.
+├── .cache
+│   ├── nix
+│   │   ├── binary-cache-v6.sqlite
+│   │   └── binary-cache-v6.sqlite-journal
+│   ├── replit
+│   │   ├── env
+│   │   │   ├── latest
+│   │   │   └── latest.json
+│   │   ├── modules
+│   │   │   ├── nodejs-22 -> /nix/store/a3k6sl10r94jnmh07dn7yxk53rac5sl0-replit-module-nodejs-22
+│   │   │   ├── nodejs-22.res
+│   │   │   ├── replit -> /nix/store/f4fnr8qhhdfgyhvzvlkj3rdfzy0jqi6y-replit-module-replit
+│   │   │   └── replit.res
+│   │   ├── modules.stamp
+│   │   ├── nix
+│   │   │   ├── dotreplitenv.json
+│   │   │   └── env.json
+│   │   ├── __replit_disk_meta.json
+│   │   └── toolchain.json
+│   └── typescript
+│       ├── 5.0
+│       │   ├── package.json
+│       │   └── package-lock.json
+│       ├── 5.3
+│       │   ├── package.json
+│       │   └── package-lock.json
+│       ├── 5.4
+│       │   ├── package.json
+│       │   └── package-lock.json
+│       ├── 5.5
+│       │   ├── package.json
+│       │   └── package-lock.json
+│       └── 5.6
+│           ├── package.json
+│           └── package-lock.json
+├── .config
+│   └── npm
+│       └── node_global
+│           └── lib
+├── data
+│   ├── orders.db
+│   ├── uploads
+│   └── users.db
+├── generated-icon.png
+├── .gitignore
+├── index.html
+├── .local
+│   └── share
+├── orders.db
+├── package.json
+├── package-lock.json
+├── postcss.config.cjs
+├── project-structure.txt
+├── project_tree.txt
+├── public
+│   └── google-logo.svg
+├── .replit
+├── src
+│   ├── api
+│   │   └── orderApi.js
+│   ├── App.jsx
+│   ├── backend
+│   │   ├── db.js
+│   │   ├── debug.js
+│   │   ├── index.js
+│   │   ├── initAdmin.js
+│   │   ├── initUsers.js
+│   │   └── setupDb.js
+│   ├── components
+│   │   └── Auth
+│   │       ├── Login.jsx
+│   │       └── Signup.jsx
+│   ├── config
+│   │   └── firebaseConfig.js
+│   ├── features
+│   │   ├── admin
+│   │   │   └── AdminDashboard.jsx
+│   │   └── user
+│   │       └── UserDashboard.jsx
+│   ├── index.css
+│   └── main.jsx
+├── tailwind.config.js
+├── .upm
+│   └── store.json
+└── vite.config.js
+
+32 directories, 54 files

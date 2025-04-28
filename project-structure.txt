@@ -1,0 +1,55 @@
+.
+├── .config
+│   └── npm
+│       └── node_global
+│           └── lib
+├── data
+│   ├── orders.db
+│   └── users.db
+├── dist
+│   ├── assets
+│   │   ├── index-BILSYBWn.js
+│   │   └── index-DTqsFErz.css
+│   └── index.html
+├── generated-icon.png
+├── .gitignore
+├── index.html
+├── .local
+│   └── share
+├── orders.db
+├── package.json
+├── package-lock.json
+├── postcss.config.cjs
+├── project-structure.txt
+├── public
+├── .replit
+├── src
+│   ├── api
+│   │   └── db.js
+│   ├── App.jsx
+│   ├── backend
+│   │   ├── db.js
+│   │   ├── debug.js
+│   │   ├── index.js
+│   │   ├── initAdmin.js
+│   │   ├── initUsers.js
+│   │   └── setupDb.js
+│   ├── components
+│   │   └── Auth
+│   │       ├── Login.jsx
+│   │       └── Signup.jsx
+│   ├── config
+│   │   └── firebaseConfig.js
+│   ├── features
+│   │   ├── admin
+│   │   │   └── AdminDashboard.jsx
+│   │   └── user
+│   │       └── UserDashboard.jsx
+│   ├── index.css
+│   └── main.jsx
+├── tailwind.config.js
+├── .upm
+│   └── store.json
+└── vite.config.js
+
+21 directories, 32 files
