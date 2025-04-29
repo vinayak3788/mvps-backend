@@ -1,4 +1,3 @@
-// src/App.jsx
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Signup from "./components/Auth/Signup";
@@ -8,8 +7,7 @@ import UserDashboard from "./features/user/UserDashboard";
 import { auth } from "./config/firebaseConfig";
 import axios from "axios";
 import { Toaster } from "react-hot-toast";
-
-import VerifyMobile from "./components/Auth/VerifyMobile"; // ✅ Import this
+import VerifyMobile from "./components/Auth/VerifyMobile";
 
 function ProtectedUserRoute({ children }) {
   const [authorized, setAuthorized] = useState(null);
@@ -24,7 +22,8 @@ function ProtectedUserRoute({ children }) {
       }
       try {
         const res = await axios.get(`/api/get-role?email=${user.email}`);
-        if (res.data.role === "user") {
+        const role = res.data.role;
+        if (["user", "admin"].includes(role)) {
           setAuthorized(true);
         } else {
           setAuthorized(false);
@@ -59,6 +58,7 @@ function ProtectedAdminRoute({ children }) {
         if (res.data.role === "admin") {
           setAuthorized(true);
         } else {
+          // don't force logout, just redirect
           setAuthorized(false);
         }
       } catch (err) {
@@ -72,7 +72,7 @@ function ProtectedAdminRoute({ children }) {
   if (authorized === null) {
     return <div className="text-center mt-10">Checking access...</div>;
   }
-  return authorized ? children : <Navigate to="/login" />;
+  return authorized ? children : <Navigate to="/userdashboard" />;
 }
 
 export default function App() {
@@ -80,13 +80,10 @@ export default function App() {
     <>
       <Toaster position="top-center" />
       <Routes>
-        {/* Default Route */}
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/verify-mobile" element={<VerifyMobile />} />
-        {/* Public Routes */}
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
-        {/* Protected Routes */}
         <Route
           path="/userdashboard"
           element={
@@ -103,7 +100,6 @@ export default function App() {
             </ProtectedAdminRoute>
           }
         />
-        {/* Fallback */}
         <Route
           path="*"
           element={

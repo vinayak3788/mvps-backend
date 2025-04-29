@@ -47,23 +47,19 @@ export const createOrder = async (order) => {
   const db = await initDb();
   const {
     userEmail,
-    fileNames,
+    fileNames = "",
     printType,
     sideOption,
-    spiralBinding,
-    totalPages,
+    spiralBinding = 0,
+    totalPages = 0,
     totalCost,
   } = order;
 
-  const result = await db.get(`SELECT MAX(id) as maxId FROM orders`);
-  const nextId = (result?.maxId || 0) + 1;
-  const orderNumber = `ORD${nextId.toString().padStart(4, "0")}`;
-
-  await db.run(
+  const result = await db.run(
     `INSERT INTO orders (
       userEmail, fileNames, printType, sideOption,
-      spiralBinding, totalPages, totalCost, orderNumber
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      spiralBinding, totalPages, totalCost
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [
       userEmail,
       fileNames,
@@ -72,9 +68,19 @@ export const createOrder = async (order) => {
       spiralBinding ? 1 : 0,
       totalPages,
       totalCost,
-      orderNumber,
     ],
   );
+
+  const insertedId = result.lastID;
+
+  const orderNumber = `ORD${insertedId.toString().padStart(4, "0")}`;
+
+  await db.run(`UPDATE orders SET orderNumber = ? WHERE id = ?`, [
+    orderNumber,
+    insertedId,
+  ]);
+
+  return { id: insertedId, orderNumber };
 };
 
 export const getAllOrders = async () => {
@@ -111,7 +117,6 @@ export const ensureUserRole = async (email) => {
 
 export const updateUserRole = async (email, role) => {
   const db = await initDb();
-  // protect vinayak3788@gmail.com
   if (email === "vinayak3788@gmail.com") {
     throw new Error("Cannot update role for protected admin.");
   }
@@ -128,7 +133,6 @@ export const getUserRole = async (email) => {
 
 export const blockUser = async (email) => {
   const db = await initDb();
-  // protect vinayak3788@gmail.com
   if (email === "vinayak3788@gmail.com") {
     throw new Error("Cannot block protected admin.");
   }
@@ -142,7 +146,6 @@ export const unblockUser = async (email) => {
 
 export const deleteUser = async (email) => {
   const db = await initDb();
-  // protect vinayak3788@gmail.com
   if (email === "vinayak3788@gmail.com") {
     throw new Error("Cannot delete protected admin.");
   }
@@ -156,3 +159,14 @@ export const isUserBlocked = async (email) => {
   ]);
   return result?.blocked === 1;
 };
+
+// Update order after file upload
+export const updateOrderFiles = async (orderId, { fileNames, totalPages }) => {
+  const db = await initDb();
+  await db.run(`UPDATE orders SET fileNames = ?, totalPages = ? WHERE id = ?`, [
+    fileNames,
+    totalPages,
+    orderId,
+  ]);
+};
+export { initDb };

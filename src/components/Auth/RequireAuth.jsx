@@ -1,8 +1,5 @@
-// src/components/Auth/RequireAuth.jsx
-
 import { useEffect, useState } from "react";
 import { auth } from "../../config/firebaseConfig";
-import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -12,37 +9,66 @@ export default function RequireAuth({ children, role }) {
   const [pending, setPending] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        toast.error("No user logged in.");
-        navigate("/login");
-      } else {
-        try {
-          const response = await axios.get(`/api/get-role?email=${user.email}`);
-          const userRole = response.data.role;
+    const checkSession = async () => {
+      console.log("🚀 Checking session start...");
+      let retries = 0;
+      while (retries < 25) {
+        // ~5 seconds max
+        const user = auth.currentUser;
+        console.log(`🔎 Attempt ${retries} | user =`, user?.email);
 
-          if (role === "admin" && userRole !== "admin") {
-            toast.error("Access denied. You are not an admin.");
-            navigate("/userdashboard");
-          } else if (role === "user" && userRole !== "user") {
-            toast.error("Access denied. You are not a normal user.");
-            navigate("/admin");
-          } else {
-            // Access allowed
+        if (user) {
+          try {
+            console.log("🔵 User found. Forcing token refresh...");
+            const token = await user.getIdToken(true);
+            console.log("✅ Token refreshed.");
+
+            console.log("🔵 Fetching user role...");
+            const res = await axios.get(`/api/get-role?email=${user.email}`);
+            const userRole = res.data.role;
+            console.log(`✅ Role fetched: ${userRole}`);
+
+            if (role && userRole !== role) {
+              console.warn(
+                `❗ Role mismatch. Required: ${role}, Got: ${userRole}`,
+              );
+              toast.error("Access denied. Redirecting...");
+              if (userRole === "admin") {
+                navigate("/admin", { replace: true });
+              } else {
+                navigate("/userdashboard", { replace: true });
+              }
+            } else {
+              console.log("🎯 Role matched. Continuing...");
+            }
+
+            setPending(false);
+            return;
+          } catch (err) {
+            console.error("⛔ Error fetching role or refreshing token:", err);
+            toast.error("Session invalid. Please login again.");
+            await auth.signOut();
+            navigate("/login", { replace: true });
+            setPending(false);
+            return;
           }
-        } catch (err) {
-          console.error("Role check failed", err);
-          navigate("/login");
         }
-      }
-      setPending(false);
-    });
 
-    return () => unsubscribe();
+        retries++;
+        await new Promise((resolve) => setTimeout(resolve, 200)); // wait 200ms
+      }
+
+      console.error("❌ User not found after retries. Session timeout.");
+      toast.error("Session timeout. Please login again.");
+      navigate("/login", { replace: true });
+      setPending(false);
+    };
+
+    checkSession();
   }, [navigate, role]);
 
   if (pending) {
-    return <div className="text-center mt-10">Checking login...</div>;
+    return <div className="text-center mt-10">Checking login session...</div>;
   }
 
   return children;

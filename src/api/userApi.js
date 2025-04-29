@@ -1,5 +1,3 @@
-// src/api/userApi.js
-
 import axios from "axios";
 
 export const getAllUsers = async () => {
@@ -29,13 +27,20 @@ export const unblockUser = async (email) => {
 
 export const updateProfile = async (
   email,
-  { firstName, lastName, mobileNumber },
+  { firstName, lastName, mobileNumber, mobileVerified },
 ) => {
   const res = await axios.post("/api/update-profile", {
     email,
     firstName,
     lastName,
     mobileNumber,
+    mobileVerified,
   });
+  return res.data;
+};
+
+// 🆕 NEW
+export const verifyMobileManual = async (email) => {
+  const res = await axios.post("/api/verify-mobile-manual", { email });
   return res.data;
 };

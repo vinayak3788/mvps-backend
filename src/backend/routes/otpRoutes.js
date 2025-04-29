@@ -1,5 +1,8 @@
 // src/backend/routes/otpRoutes.js
 
+import dotenv from "dotenv";
+dotenv.config({ path: ".env" }); // ✅ Add this at the top
+
 import express from "express";
 import axios from "axios";
 
@@ -9,12 +12,16 @@ const TWOFACTOR_API_KEY = process.env.TWOFACTOR_API_KEY;
 
 // 📨 Send OTP
 router.post("/send-otp", async (req, res) => {
-  const { mobile } = req.body;
-  if (!mobile) return res.status(400).json({ error: "Mobile number required" });
+  const { mobileNumber } = req.body; // ✅ Corrected to expect "mobileNumber"
+  if (!mobileNumber || !/^\d{10}$/.test(mobileNumber)) {
+    return res
+      .status(400)
+      .json({ error: "Valid 10-digit mobile number required" });
+  }
 
   try {
     const response = await axios.get(
-      `https://2factor.in/API/V1/${TWOFACTOR_API_KEY}/SMS/${mobile}/AUTOGEN`,
+      `https://2factor.in/API/V1/${TWOFACTOR_API_KEY}/SMS/+91${mobileNumber}/AUTOGEN`,
     );
     const sessionId = response.data?.Details;
     res.json({ sessionId });

@@ -1,22 +1,20 @@
-// src/backend/routes/orderRoutes.js
+import { getSignedUrl } from "../../config/s3Uploader.js";
 
 import express from "express";
 import multer from "multer";
+import {
+  createOrder,
+  updateOrderFiles,
+  getAllOrders,
+  updateOrderStatus,
+} from "../db.js";
+import { uploadFileToS3 } from "../../config/s3Uploader.js";
 import path from "path";
-import fs from "fs";
-import { createOrder, getAllOrders, updateOrderStatus } from "../db.js";
 
 const router = express.Router();
 
-// Uploads path
-const uploadDir = path.resolve("data/uploads");
-
-// Multer setup
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => cb(null, Date.now() + "_" + file.originalname),
-});
-const upload = multer({ storage });
+// Multer setup (memory storage because we upload directly to S3)
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Submit new order
 router.post("/submit-order", upload.array("files"), async (req, res) => {
@@ -30,25 +28,52 @@ router.post("/submit-order", upload.array("files"), async (req, res) => {
       createdAt,
       pageCounts,
     } = req.body;
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: "No files uploaded." });
+    }
+
     const parsedPages = JSON.parse(pageCounts || "[]");
 
-    const files = (req.files || []).map((file, i) => ({
-      name: file.originalname,
-      pages: parsedPages[i] || 0,
-    }));
-
-    const fileNames = files.map((f) => f.name).join(", ");
-    const totalPages = files.reduce((sum, f) => sum + (f.pages || 0), 0);
-
-    await createOrder({
+    const newOrder = await createOrder({
       userEmail: user,
-      fileNames,
+      fileNames: "",
       printType,
       sideOption,
       spiralBinding: spiralBinding === "true" ? 1 : 0,
-      totalPages,
+      totalPages: 0,
       totalCost,
       createdAt,
+      orderNumber: "",
+    });
+
+    const orderId = newOrder.id;
+    const orderNumber = `Order${orderId}`;
+
+    const uploadedFiles = [];
+    for (let i = 0; i < req.files.length; i++) {
+      const file = req.files[i];
+      const { cleanFileName } = await uploadFileToS3(
+        file.buffer,
+        file.originalname,
+        orderNumber,
+      );
+      uploadedFiles.push({
+        name: cleanFileName,
+        pages: parsedPages[i] || 0,
+      });
+    }
+
+    const fileNames = uploadedFiles.map((f) => f.name).join(", ");
+    const totalPages = uploadedFiles.reduce(
+      (sum, f) => sum + (f.pages || 0),
+      0,
+    );
+
+    await updateOrderFiles(orderId, {
+      fileNames,
+      totalPages,
+      orderNumber,
     });
 
     res.status(200).json({ message: "✅ Order submitted!" });
@@ -58,24 +83,31 @@ router.post("/submit-order", upload.array("files"), async (req, res) => {
   }
 });
 
+// Get signed download URL
+router.get("/get-signed-url", async (req, res) => {
+  const { filename } = req.query;
+  if (!filename) {
+    return res.status(400).json({ error: "Filename required" });
+  }
+  try {
+    const url = await getSignedUrl(filename);
+    res.json({ url });
+  } catch (err) {
+    console.error("Error generating signed URL:", err);
+    res.status(500).json({ error: "Failed to generate signed URL" });
+  }
+});
+
 // Fetch all orders
 router.get("/get-orders", async (req, res) => {
   try {
     const ordersData = await getAllOrders();
-    const allUploadedFiles = fs.existsSync(uploadDir)
-      ? fs.readdirSync(uploadDir)
-      : [];
 
     const ordersWithFiles = ordersData.orders.map((order) => {
       const attachedFiles = order.fileNames
-        ? order.fileNames.split(", ").map((originalName) => {
-            const matched = allUploadedFiles.find((f) =>
-              f.endsWith(originalName.trim()),
-            );
-            return matched
-              ? { name: originalName.trim(), path: `/uploads/${matched}` }
-              : { name: originalName.trim(), path: null };
-          })
+        ? order.fileNames.split(", ").map((name) => ({
+            name: name.trim(), // Only name — no static path anymore
+          }))
         : [];
 
       return { ...order, attachedFiles };
