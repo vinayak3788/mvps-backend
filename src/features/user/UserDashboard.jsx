@@ -8,6 +8,7 @@ import UploadOrderForm from "./components/UploadOrderForm";
 import OrdersHistory from "./components/OrdersHistory";
 import { useOrders } from "./components/useOrders";
 import { useAuthCheck } from "./components/useAuthCheck";
+import StationeryStore from "./components/StationeryStore";
 import axios from "axios";
 
 export default function UserDashboard() {
@@ -16,6 +17,7 @@ export default function UserDashboard() {
   const { files, setFiles, myOrders, fetchMyOrders, ordersLoading } =
     useOrders();
   const { validateMobile } = useAuthCheck();
+  const [activeTab, setActiveTab] = useState("orders");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -61,6 +63,10 @@ export default function UserDashboard() {
     }
   };
 
+  const handleViewCart = () => {
+    navigate("/cart");
+  };
+
   if (pending) {
     return <div className="text-center mt-10">Checking login...</div>;
   }
@@ -68,37 +74,76 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <Toaster />
-      <div className="flex justify-between items-center mb-4">
+
+      {/* Topbar */}
+      <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
         <h1 className="text-xl font-bold flex items-center gap-2">
           🖨️ MVPS Dashboard
         </h1>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={handleViewCart}
+            className="bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600"
+          >
+            🛕️ View Cart
+          </button>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+
+      {/* Tab Buttons */}
+      <div className="flex justify-center mb-6 gap-4 flex-wrap">
         <button
-          onClick={handleLogout}
-          className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600"
+          className={`px-4 py-2 rounded ${
+            activeTab === "orders"
+              ? "bg-blue-500 text-white"
+              : "bg-white text-blue-500 border"
+          }`}
+          onClick={() => setActiveTab("orders")}
         >
-          Logout
+          📄 My Orders
+        </button>
+        <button
+          className={`px-4 py-2 rounded ${
+            activeTab === "stationery"
+              ? "bg-green-500 text-white"
+              : "bg-white text-green-500 border"
+          }`}
+          onClick={() => setActiveTab("stationery")}
+        >
+          🛒 Stationery Store
         </button>
       </div>
 
-      {/* Upload Section */}
-      <UploadOrderForm
-        files={files}
-        setFiles={setFiles}
-        fetchMyOrders={fetchMyOrders}
-      />
+      {/* Tab Content */}
+      {activeTab === "orders" ? (
+        <>
+          <UploadOrderForm
+            files={files}
+            setFiles={setFiles}
+            fetchMyOrders={fetchMyOrders}
+          />
 
-      {/* Orders History Section */}
-      <OrdersHistory myOrders={myOrders} ordersLoading={ordersLoading} />
+          <OrdersHistory myOrders={myOrders} ordersLoading={ordersLoading} />
 
-      {/* Admin Access Button */}
-      <div className="mt-10 text-center">
-        <button
-          onClick={handleAdminAccess}
-          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition"
-        >
-          🔐 Switch to Admin Dashboard
-        </button>
-      </div>
+          {/* Admin Access Button */}
+          <div className="mt-10 text-center">
+            <button
+              onClick={handleAdminAccess}
+              className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition"
+            >
+              🔐 Switch to Admin Dashboard
+            </button>
+          </div>
+        </>
+      ) : (
+        <StationeryStore />
+      )}
     </div>
   );
 }

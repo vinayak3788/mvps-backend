@@ -202,9 +202,21 @@ router.get("/get-profile", async (req, res) => {
       driver: sqlite3.Database,
     });
 
-    const profile = await db.get(`SELECT * FROM profiles WHERE email = ?`, [
-      email,
-    ]);
+    const profile = await db.get(
+      `
+      SELECT 
+        p.email, 
+        p.firstName, 
+        p.lastName, 
+        p.mobileNumber, 
+        p.mobileVerified, 
+        u.blocked 
+      FROM profiles p
+      JOIN users u ON p.email = u.email
+      WHERE p.email = ?
+    `,
+      [email],
+    );
 
     if (!profile) {
       return res.status(404).json({ error: "Profile not found" });

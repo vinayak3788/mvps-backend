@@ -1,4 +1,5 @@
 import { getSignedUrl } from "../../config/s3Uploader.js";
+import { sendOrderConfirmation } from "../mailer.js";
 
 import express from "express";
 import multer from "multer";
@@ -75,6 +76,21 @@ router.post("/submit-order", upload.array("files"), async (req, res) => {
       totalPages,
       orderNumber,
     });
+
+    const html = `
+      <h2>🧾 Order Confirmation</h2>
+      <p><strong>Order No:</strong> ${orderNumber}</p>
+      <p><strong>User:</strong> ${user}</p>
+      <p><strong>Files:</strong> ${fileNames}</p>
+      <p><strong>Total:</strong> ₹${totalCost}</p>
+      <p>Thank you for choosing MVPS Printing Services.</p>
+    `;
+
+    await sendOrderConfirmation(
+      `${user}, mvpservices2310@gmail.com`,
+      `📌 MVPS Order Confirmed - ${orderNumber}`,
+      html,
+    );
 
     res.status(200).json({ message: "✅ Order submitted!" });
   } catch (err) {

@@ -8,6 +8,9 @@ import { auth } from "./config/firebaseConfig";
 import axios from "axios";
 import { Toaster } from "react-hot-toast";
 import VerifyMobile from "./components/Auth/VerifyMobile";
+import Cart from "./pages/Cart";
+import UserOrders from "./pages/UserOrders";
+import { onAuthStateChanged } from "firebase/auth";
 
 function ProtectedUserRoute({ children }) {
   const [authorized, setAuthorized] = useState(null);
@@ -58,7 +61,6 @@ function ProtectedAdminRoute({ children }) {
         if (res.data.role === "admin") {
           setAuthorized(true);
         } else {
-          // don't force logout, just redirect
           setAuthorized(false);
         }
       } catch (err) {
@@ -76,6 +78,20 @@ function ProtectedAdminRoute({ children }) {
 }
 
 export default function App() {
+  const [authReady, setAuthReady] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setAuthReady(true);
+      console.log("✅ Firebase user restored:", user?.email || "none");
+    });
+    return () => unsubscribe();
+  }, []);
+
+  if (!authReady) {
+    return <div className="text-center mt-10">Loading...</div>;
+  }
+
   return (
     <>
       <Toaster position="top-center" />
@@ -84,6 +100,7 @@ export default function App() {
         <Route path="/verify-mobile" element={<VerifyMobile />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+
         <Route
           path="/userdashboard"
           element={
@@ -98,6 +115,22 @@ export default function App() {
             <ProtectedAdminRoute>
               <AdminDashboard />
             </ProtectedAdminRoute>
+          }
+        />
+        <Route
+          path="/cart"
+          element={
+            <ProtectedUserRoute>
+              <Cart />
+            </ProtectedUserRoute>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <ProtectedUserRoute>
+              <UserOrders />
+            </ProtectedUserRoute>
           }
         />
         <Route

@@ -1,7 +1,13 @@
 // src/components/Auth/Login.jsx
 
 import React, { useState } from "react";
-import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  setPersistence,
+  browserLocalPersistence,
+} from "firebase/auth";
+
 import { auth, googleProvider } from "../../config/firebaseConfig";
 import { useNavigate, Link } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
@@ -32,6 +38,7 @@ export default function Login() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
+      await setPersistence(auth, browserLocalPersistence);
       await signInWithPopup(auth, googleProvider);
       await handlePostLogin();
     } catch (error) {
@@ -51,19 +58,24 @@ export default function Login() {
     }
 
     try {
-      // 1. Fetch Role
+      // 1. Fetch role
       const roleRes = await axios.get(`/api/get-role?email=${userEmail}`);
       let role = roleRes.data.role;
 
-      // If role is missing/unknown, force "user"
       if (!role || (role !== "admin" && role !== "user")) {
         console.warn("⚠️ Unknown role received. Defaulting to user.");
         role = "user";
       }
 
-      // 2. Fetch Profile
+      // 2. Fetch profile (includes mobile, name, etc.)
       const profileRes = await axios.get(`/api/get-profile?email=${userEmail}`);
-      const { mobileNumber, mobileVerified } = profileRes.data || {};
+      const { mobileNumber, mobileVerified, blocked } = profileRes.data || {};
+
+      // 🚫 BLOCKED CHECK
+      if (blocked === 1) {
+        toast.error("Your account has been blocked by the admin.");
+        return;
+      }
 
       if (!mobileNumber || mobileVerified !== 1) {
         toast.error("Mobile number not verified yet.");
@@ -73,7 +85,7 @@ export default function Login() {
         return;
       }
 
-      // 3. Mobile verified, route based on role
+      // ✅ Route by role
       if (role === "admin") {
         navigate("/admin");
       } else {

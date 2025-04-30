@@ -5,6 +5,8 @@ import React, { useEffect, useState } from "react";
 import { signOut, onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../config/firebaseConfig";
 import { useNavigate } from "react-router-dom";
+import AdminStationeryTable from "./components/AdminStationeryTable";
+
 import { getAllOrders, updateOrderStatus } from "../../api/orderApi";
 import {
   getAllUsers,
@@ -18,6 +20,7 @@ import Sidebar from "./components/Sidebar";
 import OrdersTable from "./components/OrdersTable";
 import UsersTable from "./components/UsersTable";
 import EditUserModal from "./components/EditUserModal";
+import AdminStationeryForm from "./components/AdminStationeryForm";
 import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 
@@ -36,7 +39,7 @@ export default function AdminDashboard() {
     try {
       await verifyMobileManual(email);
       toast.success("Mobile verification updated");
-      await fetchUsers(); // Refresh users
+      await fetchUsers();
     } catch (err) {
       console.error("❌ Failed to verify mobile:", err);
       toast.error("Failed to verify mobile.");
@@ -72,7 +75,6 @@ export default function AdminDashboard() {
       const res = await axios.get(`/api/get-role?email=${user.email}`);
       const role = res.data.role;
       if (role !== "admin") {
-        // Allow even admin to access user dashboard if needed
         toast.success("Redirecting to User Dashboard!");
         setTimeout(() => navigate("/userdashboard"), 1500);
         return false;
@@ -218,7 +220,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex flex-col lg:flex-row min-h-screen overflow-hidden bg-gray-100">
       <Toaster />
 
       <Sidebar
@@ -230,7 +232,7 @@ export default function AdminDashboard() {
         handleSwitchToUserDashboard={handleSwitchToUserDashboard}
       />
 
-      <div className="flex-1 p-6 overflow-x-auto">
+      <div className="flex-1 overflow-y-auto px-4 py-6">
         {activeTab === "orders" ? (
           <>
             <h1 className="text-3xl font-bold mb-6 text-center">
@@ -242,7 +244,7 @@ export default function AdminDashboard() {
               handleStatusChange={handleStatusChange}
             />
           </>
-        ) : (
+        ) : activeTab === "users" ? (
           <>
             <h1 className="text-3xl font-bold mb-6 text-center">
               Admin - Manage Users
@@ -264,6 +266,16 @@ export default function AdminDashboard() {
               saving={saving}
             />
           </>
+        ) : activeTab === "stationery" ? (
+          <>
+            <h1 className="text-3xl font-bold mb-6 text-center">
+              Admin - Manage Stationery
+            </h1>
+            <AdminStationeryForm />
+            <AdminStationeryTable />
+          </>
+        ) : (
+          <div className="text-center text-gray-500">Unknown tab selected</div>
         )}
       </div>
     </div>

@@ -2,59 +2,76 @@
 
 import React from "react";
 
-export default function Sidebar({
+const Sidebar = ({
   activeTab,
   setActiveTab,
   fetchOrders,
   fetchUsers,
   handleLogout,
   handleSwitchToUserDashboard,
-}) {
+}) => {
+  const baseBtn =
+    "py-2 px-4 text-sm font-medium rounded-md transition whitespace-nowrap shadow-sm";
+
+  const activeStyles = "bg-blue-600 text-white";
+  const inactiveStyles = "hover:bg-blue-100 text-gray-800";
+
   return (
-    <div className="w-48 bg-white shadow-md p-4 flex flex-col gap-4">
-      <button
-        onClick={() => {
-          setActiveTab("orders");
-          fetchOrders();
-        }}
-        className={`px-4 py-2 rounded ${
-          activeTab === "orders"
-            ? "bg-blue-600 text-white"
-            : "bg-gray-200 text-black"
-        }`}
-      >
-        Manage Orders
-      </button>
+    <div className="w-full max-w-full sm:max-w-xs bg-white p-4 shadow-md flex flex-col gap-4 sm:min-h-screen">
+      <h2 className="text-2xl font-bold text-center mb-2">Admin Panel</h2>
 
-      <button
-        onClick={() => {
-          setActiveTab("users");
-          fetchUsers();
-        }}
-        className={`px-4 py-2 rounded ${
-          activeTab === "users"
-            ? "bg-green-600 text-white"
-            : "bg-gray-200 text-black"
-        }`}
-      >
-        Manage Users
-      </button>
-
-      <div className="mt-10 flex flex-col gap-2">
+      <div className="flex flex-wrap gap-2 sm:flex-col justify-center">
         <button
-          onClick={handleLogout}
-          className="bg-red-500 text-white py-1 rounded hover:bg-red-600"
+          className={`${baseBtn} ${
+            activeTab === "orders" ? activeStyles : inactiveStyles
+          }`}
+          onClick={() => {
+            setActiveTab("orders");
+            fetchOrders();
+          }}
         >
-          Logout
+          📦 Manage Orders
         </button>
 
         <button
-          onClick={handleSwitchToUserDashboard}
-          className="bg-gray-800 text-white py-1 rounded hover:bg-gray-900"
+          className={`${baseBtn} ${
+            activeTab === "users" ? activeStyles : inactiveStyles
+          }`}
+          onClick={() => {
+            setActiveTab("users");
+            fetchUsers();
+          }}
         >
-          User Dashboard
+          👤 Manage Users
+        </button>
+
+        <button
+          className={`${baseBtn} ${
+            activeTab === "stationery" ? activeStyles : inactiveStyles
+          }`}
+          onClick={() => setActiveTab("stationery")}
+        >
+          🖋️ Manage Stationery
+        </button>
+      </div>
+
+      <div className="mt-4 sm:mt-auto flex flex-wrap sm:flex-col gap-2 justify-center">
+        <button
+          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium"
+          onClick={handleSwitchToUserDashboard}
+        >
+          Switch to User Dashboard
+        </button>
+
+        <button
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium"
+          onClick={handleLogout}
+        >
+          Logout
         </button>
       </div>
     </div>
   );
-}
+};
+
+export default Sidebar;
